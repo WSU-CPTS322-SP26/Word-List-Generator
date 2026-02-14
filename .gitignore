@@ -1,0 +1,40 @@
+# Binaries for programs
+*.exe
+*.lbr
+*.lib
+*.obj
+*.o
+*.so
+*.dll
+
+# Test binary, should not be committed to git
+# Except for the case you are committing them for testing purposes
+# *.test
+
+# Output of the go tool pprof
+# *.pprof
+
+# IDE files
+.idea/
+
+# Go module cache (optional, if you want to ignore it)
+# By default, Go places this in the user's home directory.
+# This line is typically not needed in a project-level gitignore, but useful for global ones.
+# $GOPATH/pkg/mod/
+
+# Project-specific IDE files that are safe to ignore
+# Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, GoLand
+# Files that are generated on import or contain user-specific settings should be ignored.
+out/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/*.iml
+.idea/misc.xml
+.idea/vcs.xml
+.idea/dictionaries
+
+# OS-generated files
+.DS_Store # Mac
+Thumbs.db # Windows
+
