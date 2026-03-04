@@ -5,7 +5,32 @@ import (
 	"unicode"
 )
 
+//TODO
+//X case up
+//X case down
+//Leetspeak (multiple versions
+//-
+//alternate caps
+//reverse string
+
+// Mutation Defines a Mutation function, allowing structural typing
 type Mutation func(word string, scratchpad []string) []string
+
+// Helper Mutations: Mutations that alter mutations, or assist in some way //
+
+// MakeOptional takes a Mutation, then returns a modified version of the mutation that also returns the unaltered word
+func MakeOptional(mut Mutation) Mutation {
+	return func(word string, scratchpad []string) []string {
+		//Put original unchanged word in scratchpad
+		scratchpad = append(scratchpad, word)
+
+		//Run the mutation and append its new word to the same scratchpad
+		temp := mut(word, []string{})
+		scratchpad = append(scratchpad, temp...)
+
+		return scratchpad
+	}
+}
 
 // 1-to-Many Mutations: Taking one word and making multiple variants //
 
@@ -25,6 +50,7 @@ func CreateAppendMutation(charset string) Mutation {
 	return func(word string, scratchpad []string) []string {
 
 		//Appending to the pre-used, length 0 buffer
+		//Throwing away the slice index label with _
 		for _, c := range characters {
 			scratchpad = append(scratchpad, word+c)
 		}
@@ -44,6 +70,7 @@ func CreatePrependMutation(charset string) Mutation {
 
 		//Appending to the pre-used, length 0 buffer
 		//Closure allows this anonymous function to access the charset
+		//Throwing away the slice index label with _
 		for _, c := range characters {
 			scratchpad = append(scratchpad, c+word)
 		}
@@ -67,7 +94,7 @@ func CreateLowerCaseMutation() Mutation {
 	}
 }
 
-// These take a unicode language case, then apply that specific variant of toUpper or toLower
+// CreateSpecialUpperCaseMutation and CreateSpecialLowerCaseMutation:These take a unicode language case, then apply that specific variant of toUpper or toLower
 // This is a useful option for niche language cases, like the Turkish undotted lowercase i
 func CreateSpecialUpperCaseMutation(language unicode.SpecialCase) Mutation {
 	return func(word string, scratchpad []string) []string {
