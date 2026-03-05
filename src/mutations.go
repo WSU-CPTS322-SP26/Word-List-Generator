@@ -3,6 +3,9 @@ package main
 import (
 	"strings"
 	"unicode"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 //TODO
@@ -81,30 +84,26 @@ func CreatePrependMutation(charset string) Mutation {
 
 // 1-to-1 Mutations: Only one output //
 
-func CreateUpperCaseMutation() Mutation {
-	return func(word string, scratchpad []string) []string {
-		//appends new word to scratchpad and returns it
-		return append(scratchpad, strings.ToUpper(word))
-	}
-}
-
-func CreateLowerCaseMutation() Mutation {
-	return func(word string, scratchpad []string) []string {
-		return append(scratchpad, strings.ToLower(word))
-	}
-}
-
-// CreateSpecialUpperCaseMutation and CreateSpecialLowerCaseMutation:These take a unicode language case, then apply that specific variant of toUpper or toLower
+//These take a Unicode language case, then apply that specific variant of toUpper or toLower
 // This is a useful option for niche language cases, like the Turkish undotted lowercase i
-func CreateSpecialUpperCaseMutation(language unicode.SpecialCase) Mutation {
+//Default is assumed to be English
+
+func CreateUpperCaseMutation(language unicode.SpecialCase) Mutation {
 	return func(word string, scratchpad []string) []string {
 		//appends new word to scratchpad and returns it
 		return append(scratchpad, strings.ToUpperSpecial(language, word))
 	}
 }
-func CreateSpecialLowerCaseMutation(language unicode.SpecialCase) Mutation {
+func CreateLowerCaseMutation(language unicode.SpecialCase) Mutation {
 	return func(word string, scratchpad []string) []string {
 		//appends new word to scratchpad and returns it
 		return append(scratchpad, strings.ToUpperSpecial(language, word))
+	}
+}
+
+func CreateTitleMutation(lang language.Tag) Mutation {
+	caser := cases.Title(lang)
+	return func(word string, scratchpad []string) []string {
+		return append(scratchpad, caser.String(word))
 	}
 }
