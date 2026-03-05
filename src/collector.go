@@ -12,7 +12,7 @@ import (
 
 // Function to write words from the outputChannel to file, then sends a done signal to the status channel
 // Expects the output channel, the done channel, the path, and the name of the file. Also checks if the file is to be overwritten with new data
-func StartCollector(outputChannel <-chan string, status chan<- error, filename string, path string, overwrite bool) {
+func StartCollector(outputChannel <-chan string, status chan<- error, path string, filename string, overwrite bool) {
 
 	//Tracker for initializing the filepaths only if words are put into the buffer
 	fileCreated := false
@@ -45,7 +45,7 @@ func StartCollector(outputChannel <-chan string, status chan<- error, filename s
 			//Attempting to repair broken folder structure in case wordlists and/or userGenerated was moved/deleted
 			//0755 perms provides necessary perms for a folder (being able to execute it is mandatory)
 			if err := os.MkdirAll(path, 0755); err != nil {
-				status <- fmt.Errorf("Failed to create directory: %v", err)
+				status <- fmt.Errorf("failed to create directory: %v", err)
 				return
 			}
 
@@ -60,7 +60,7 @@ func StartCollector(outputChannel <-chan string, status chan<- error, filename s
 			outFile, err = os.OpenFile(fullPath, flags, 0666)
 
 			if err != nil {
-				status <- fmt.Errorf("Failed to create file: %v", err)
+				status <- fmt.Errorf("failed to create file: %v", err)
 				return
 			}
 
@@ -70,7 +70,7 @@ func StartCollector(outputChannel <-chan string, status chan<- error, filename s
 		//Now that we're ready to write, start filling up the outFileBuffer and skip previous logic
 		_, err := outFileBuffer.WriteString(word + "\n")
 		if err != nil {
-			status <- fmt.Errorf("Failed to write to buffer: %v", err)
+			status <- fmt.Errorf("failed to write to buffer: %v", err)
 			break
 		}
 	}
@@ -78,7 +78,7 @@ func StartCollector(outputChannel <-chan string, status chan<- error, filename s
 	//Flushes any remaining data in the outFileBuffer, writing it to file
 	if fileCreated {
 		if err := outFileBuffer.Flush(); err != nil {
-			status <- fmt.Errorf("Failed to flush buffer: %v", err)
+			status <- fmt.Errorf("failed to flush buffer: %v", err)
 			outFile.Close()
 			return
 		}
