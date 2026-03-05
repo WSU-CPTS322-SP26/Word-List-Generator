@@ -39,7 +39,7 @@ func StartCollector(outputChannel <-chan string, status chan<- error, path strin
 
 	//Runs until outputChannel is closed
 	for word := range outputChannel {
-		//Only undergoes file creation/checking the first time the outputChannel receives something
+		//Only undergoes file initialization the first time the after outputChannel receives something
 		//This prevents unnecessary operations on empty outputChannels
 		if !fileCreated {
 			//Attempting to repair broken folder structure in case wordlists and/or userGenerated was moved/deleted

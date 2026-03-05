@@ -84,10 +84,10 @@ func CreatePrependMutation(charset string) Mutation {
 
 // 1-to-1 Mutations: Only one output //
 
-//These take a 	Unicode language case, then apply that specific variant of toUpper or toLower
-// This is a useful option for niche language cases, like the Turkish undotted lowercase i
+//These take a language, then apply that specific variant of toUpper or toLower
 //Default is assumed to be English
 
+// This is a useful option for niche language cases, like the Turkish undotted lowercase i
 func CreateUpperCaseMutation(language unicode.SpecialCase) Mutation {
 	return func(word string, scratchpad []string) []string {
 		//appends new word to scratchpad and returns it
@@ -101,7 +101,8 @@ func CreateLowerCaseMutation(language unicode.SpecialCase) Mutation {
 	}
 }
 
-func CreateTitleMutation(lang language.Tag) Mutation {
+// CreateTitleCaseMutation capitalizes the first letter and proper nouns, based on the rules of the specified language
+func CreateTitleCaseMutation(lang language.Tag) Mutation {
 	caser := cases.Title(lang)
 	return func(word string, scratchpad []string) []string {
 		return append(scratchpad, caser.String(word))
