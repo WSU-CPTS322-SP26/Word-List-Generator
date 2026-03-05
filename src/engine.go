@@ -21,7 +21,7 @@ func runPipeline(word string, stage int, pipeline [][]Mutation, scratchpads [][]
 		}
 	}
 }
-func worker(inputChan <-chan string, pipeline [][]Mutation, outputChan chan<- string) {
+func worker(pipeline [][]Mutation, inputChan <-chan string, outputChan chan<- string) {
 	//Making buffers. These only serve this specific worker, one for each stage in the pipeline
 	//Each stage needs its own buffer/scratchpad
 	scratchpads := make([][]string, len(pipeline))
