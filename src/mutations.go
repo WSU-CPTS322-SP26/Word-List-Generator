@@ -84,7 +84,7 @@ func CreatePrependMutation(charset string) Mutation {
 
 // 1-to-1 Mutations: Only one output //
 
-//These take a Unicode language case, then apply that specific variant of toUpper or toLower
+//These take a 	Unicode language case, then apply that specific variant of toUpper or toLower
 // This is a useful option for niche language cases, like the Turkish undotted lowercase i
 //Default is assumed to be English
 
