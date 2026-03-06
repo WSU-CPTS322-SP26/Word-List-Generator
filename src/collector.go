@@ -8,7 +8,6 @@ import (
 )
 
 //TODO: User progress update
-//TODO: alt error report: statusChannel <- fmt.Errorf("collector create: %w", err)
 
 // StartCollector is a function to take words from the outputChannel and write them to a target file, then sends a done signal to the statusChannel channel
 // Expects open inputChannel, open statusChannel, the path, and the name of the file. Also checks if the file is to be overwritten with new data
