@@ -97,14 +97,14 @@ func CreateUpperCaseMutation(language unicode.SpecialCase) Mutation {
 func CreateLowerCaseMutation(language unicode.SpecialCase) Mutation {
 	return func(word string, scratchpad []string) []string {
 		//appends new word to scratchpad and returns it
-		return append(scratchpad, strings.ToUpperSpecial(language, word))
+		return append(scratchpad, strings.ToLowerSpecial(language, word))
 	}
 }
 
 // CreateTitleCaseMutation capitalizes the first letter and proper nouns, based on the rules of the specified language
 func CreateTitleCaseMutation(lang language.Tag) Mutation {
-	caser := cases.Title(lang)
 	return func(word string, scratchpad []string) []string {
+		caser := cases.Title(lang)
 		return append(scratchpad, caser.String(word))
 	}
 }
