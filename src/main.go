@@ -27,7 +27,7 @@ func RunGenerator() {
 	//Begin listening to outputChannel and prepare to write words to file
 	//Stops running when the file is fully read
 	//Hardcoded for testing purposes
-	go StartCollector(outputChannel, statusChannel, "wordlists/userGenerated", "newEnglish", true)
+	go StartCollector(outputChannel, statusChannel, "src/wordlists/userGenerated", "newEnglish", true)
 
 	//Initialize sync group for workers
 	var wg sync.WaitGroup
@@ -54,7 +54,7 @@ func RunGenerator() {
 	go func() {
 		//Updates sync group when finished
 		defer wg.Done()
-		StartLoader(inputChannel, statusChannel, "wordlists/premade/englishWordlist")
+		StartLoader(inputChannel, statusChannel, "src/wordlists/premade/englishWordlist")
 	}()
 
 	//Launching shutdown goroutine waiting for workers to finish
