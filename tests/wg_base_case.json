@@ -1,0 +1,55 @@
+{
+  "_comment": "This is a test config that runs one job at a time. Jobs is the array that holds all of the jobs, this file has one. The job is a single generation job. reads from sources, runs every word through the pipeline and write the results to output.",
+    "jobs": [
+    {
+      "_comment": "The input wordlist file each line is read as one word and sent to the pipeline. for the pipeline: Ordered list of mutation stages. Each stage is an array. Stages run left to right. within a stage, all mutations run as or branches. each produces its own set of variants independently",
+      "name": "base_case_test",
+      "sources": [
+        {
+          "_comment": "Path to the input wordlist .txt file. this can be relative to the executable or absolute",
+          "filepath": "./wordlists/userGenerated/test_input.txt"
+        }
+      ],
+      
+      "pipeline": [
+        [
+          {
+            
+            "_comment": "This normalizes every word to lowercase before other mutations run. Prevents duplicate output from mixed case word sources",
+            "type": "lowercase",
+            "params": {}
+          }
+        ],
+        [
+          {
+            "_comment": "appends each character in the charset to the word one at at time, producing one variant per char. charset 0-9 turns password into password0, password1, etc.",
+            "type": "append",
+            "params": {
+              "charset": "0123456789"
+            }
+          }
+        ],
+        [
+          {
+            "_comment": "Or branch 1. converts the entire word to upper case. Runs independantly from the prepend branch below it",
+            "type": "uppercase",
+            "params": {}
+          },
+          {
+            "_comment": "OR branch 2. prepends each char in the charset to the word one at a time. charset !@#$ turns password 1 into !password1, ect",
+            "type": "prepend",
+            "params": {
+              "charset": "!@#$"
+            }
+          }
+        ]
+      ],
+      "output": {
+        "_comment": "path to the output .txt file. created if it does not exist. Over written or appended based on the append flag below. If include original is true, results are added to the end of an existing output file. if false the output file is overwritten fresh each run.",
+        "filepath": "./wordlists/userGenerated/test_output.txt",
+        "include_original": false,
+        "append": false
+      }
+    }
+  ]
+}
