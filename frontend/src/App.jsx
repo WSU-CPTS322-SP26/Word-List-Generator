@@ -1,16 +1,14 @@
 import {useState} from 'react';
 import logo from './assets/images/logo-universal.png';
 import './App.css';
-import {Greet} from "../wailsjs/go/main/App";
+import {StartGenerator} from "../wailsjs/go/main/App";
 
 function App() {
-    const [resultText, setResultText] = useState("Please enter your name below 👇");
-    const [name, setName] = useState('');
-    const updateName = (e) => setName(e.target.value);
-    const updateResultText = (result) => setResultText(result);
+    const [resultText, setResultText] = useState("Click the button to start the wordlist generator"); // Initial state
 
-    function greet() {
-        Greet(name).then(updateResultText);
+    // This function now triggers your Go backend in a goroutine
+    function runGenerator() {
+        StartGenerator().then((result) => setResultText(result));
     }
 
     return (
@@ -18,8 +16,8 @@ function App() {
             <img src={logo} id="logo" alt="logo"/>
             <div id="result" className="result">{resultText}</div>
             <div id="input" className="input-box">
-                <input id="name" className="input" onChange={updateName} autoComplete="off" name="input" type="text"/>
-                <button className="btn" onClick={greet}>Greet</button>
+                {/* Simplified UI for your wordlist generator */}
+                <button className="btn" onClick={runGenerator}>Start Generator</button>
             </div>
         </div>
     )
