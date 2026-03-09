@@ -57,5 +57,5 @@ out/
 .idea/dictionaries
 
 # OS-generated files
-.DS_Store # Mac
-Thumbs.db # Windows
+.DS_Store
+Thumbs.db
