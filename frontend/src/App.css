@@ -1,59 +1,51 @@
-#app {
+#App {
+    display: flex; /* Sidebar on left, Workbench on right  */
     height: 100vh;
-    text-align: center;
+    width: 100vw;
+    background-color: #0f172a; /* Matching your dark screenshot */
+    color: #f8fafc;
 }
 
-#logo {
-    display: block;
-    width: 50%;
-    height: 50%;
-    margin: auto;
-    padding: 10% 0 0;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    background-origin: content-box;
+.ingredients-list {
+    width: 240px;
+    background-color: #1e293b;
+    border-right: 1px solid #334155;
+    padding: 1.5rem;
 }
 
-.result {
-    height: 20px;
-    line-height: 20px;
-    margin: 1.5rem auto;
+.workbench {
+    flex: 1; /* Fills remaining space [cite: 40] */
+    display: flex;
+    flex-direction: column;
+    position: relative;
 }
 
-.input-box .btn {
-    width: 60px;
-    height: 30px;
-    line-height: 30px;
-    border-radius: 3px;
-    border: none;
-    margin: 0 0 0 20px;
-    padding: 0 8px;
-    cursor: pointer;
+.canvas {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: 2px dashed #334155; /* Visual guide for drop zone [cite: 41] */
+    margin: 2rem;
+    border-radius: 8px;
 }
 
-.input-box .btn:hover {
-    background-image: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);
-    color: #333333;
+.status-bar {
+    position: absolute; /* Bottom right as requested  */
+    bottom: 20px;
+    right: 20px;
+    background: #020617;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    border: 1px solid #334155;
 }
 
-.input-box .input {
-    border: none;
-    border-radius: 3px;
-    outline: none;
-    height: 30px;
-    line-height: 30px;
-    padding: 0 10px;
-    background-color: rgba(240, 240, 240, 1);
-    -webkit-font-smoothing: antialiased;
-}
-
-.input-box .input:hover {
-    border: none;
-    background-color: rgba(255, 255, 255, 1);
-}
-
-.input-box .input:focus {
-    border: none;
-    background-color: rgba(255, 255, 255, 1);
+.item {
+    background: #334155;
+    padding: 8px;
+    margin: 5px 0;
+    border-radius: 4px;
+    cursor: grab;
 }
