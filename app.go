@@ -1,9 +1,9 @@
 package main
 
 import (
-	"Word-List-Generator/src"
+	"Word-List-Generator/backend"
 	"context"
-	//"fmt"
+	"fmt"
 )
 
 // App struct
@@ -22,9 +22,17 @@ func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 }
 
-func (a *App) StartGenerator() string {
-	// We run this in a goroutine so the UI doesn't freeze while waiting for the channels
-	go src.RunGenerator()
-
-	return "Wordlist generation started!"
+func (a *App) StartPipeline(spec [][]src.MutSpec) string {
+	go func() {
+		pipeline, err := src.BuildPipeline(spec)
+		if err != nil {
+			fmt.Printf("Pipeline Build Error: %v\n", err)
+			return
+		}
+		src.RunGenerator(pipeline)
+	}()
+	
+	return "Pipeline Built and Started"
 }
+
+

@@ -6,14 +6,14 @@ import (
 	"sync"
 )
 
-func RunGenerator() {
+func RunGenerator(pipeline [][]Mutation) {
 	//Check cores to determine the optimal amount of workers
 	numWorkers := runtime.NumCPU()
 	fmt.Printf("Detected %d cores \n", numWorkers)
 
 	//Buffered channel for errors or the done signal, one potential error per process (each worker plus the collector and loader)
 	statusChannel := make(chan error, numWorkers+2)
-	defer close(statusChannel)
+	
 
 	//Buffered channels that hold words before and after reading/writing
 	//inputChannel is closed when the loader finishes
@@ -21,13 +21,10 @@ func RunGenerator() {
 	//outputChannel is closed when both the loader and the workers finish
 	outputChannel := make(chan string, 10000)
 
-	//Placeholder hardcoded pipeline
-	pipeline := BuildTestPipeline()
-
 	//Begin listening to outputChannel and prepare to write words to file
 	//Stops running when the file is fully read
 	//Hardcoded for testing purposes
-	go StartCollector(outputChannel, statusChannel, "src/wordlists/userGenerated", "newEnglish", true)
+	go StartCollector(outputChannel, statusChannel, "wordlists/userGenerated", "newTest", true)
 
 	//Initialize sync group for workers
 	var wg sync.WaitGroup
@@ -54,7 +51,7 @@ func RunGenerator() {
 	go func() {
 		//Updates sync group when finished
 		defer wg.Done()
-		StartLoader(inputChannel, statusChannel, "src/wordlists/premade/englishWordlist")
+		StartLoader(inputChannel, statusChannel, "wordlists/premade/names")
 	}()
 
 	//Launching shutdown goroutine waiting for workers to finish
