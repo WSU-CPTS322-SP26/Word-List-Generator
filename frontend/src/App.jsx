@@ -1,6 +1,6 @@
 // Import default React tools
 import React, { useState, useCallback } from 'react';
-import ReactFlow, { addEdge, Background, Controls, applyNodeChanges, Handle, Position, useEdges } from 'reactflow';
+import ReactFlow, { addEdge, Background, Controls, applyNodeChanges, Handle, Position, useEdges, useNodes } from 'reactflow';
 
 // Import custom function from app.go
 import { StartPipeline } from '../wailsjs/go/main/App';
@@ -12,20 +12,44 @@ import 'reactflow/dist/style.css';
 let id = 10;
 const getID = () => `node_${id++}`;
 
-const initialNodes = [];
-
 const MutationNode = ({ id, data }) => {
     const edges = useEdges();
+    const nodes = useNodes();
+
     {/* Checking if it's a capitalize block */}
     const isCapitalize = data.type === 'capitalize'
 
-    const isStacked = edges.some(
-        (edge) => (edge.source === id || edge.target === id) &&
-                (edge.sourceHandle === 'top' || edge.sourceHandle === 'bottom' ||
-                    edge.targetHandle === 'top' || edge.targetHandle === 'bottom')
-    );
+    const isOptionInStack = edges.some((edge) => {
+        const isPart = edge.source === id || edge.target === id;
+        const isVert = (edge.sourceHandle === 'top' || edge.sourceHandle === 'bottom' ||
+                        edge.targetHandle === 'top' || edge.targetHandle === 'bottom');
 
-    const showSideHandles = !isCapitalize && !isStacked;
+        if (isPart && isVert) {
+            const otherId = edge.source === id ? edge.target : edge.source;
+            const otherNode = nodes.find(n => n.id === otherId);
+            
+            if (otherNode?.type === 'mutation') {
+
+                const otherHasHorizontal = edges.some(e =>
+                    (e.source === otherId && (e.sourceHandle === 'left' || e.sourceHandle === 'right')) ||
+                    (e.target === otherId && (e.targetHandle === 'left' || e.targetHandle === 'right'))
+                );
+
+                const thisHasHorizontal = edges.some(e => 
+                    (e.source === id && (e.sourceHandle === 'left' || e.sourceHandle === 'right')) ||
+                    (e.target === id && (e.targetHandle === 'left' || e.targetHandle === 'right'))
+                );
+
+                if (thisHasHorizontal) return false;
+                if (otherHasHorizontal) return true;
+
+                return edge.source === id;
+            }
+        }
+        return false
+    });
+
+    const showSideHandles = !isCapitalize && !isOptionInStack;
 
     return (
         <div style={{ 
@@ -37,12 +61,12 @@ const MutationNode = ({ id, data }) => {
                 position: 'relative' 
             }}>
             {/* L-R Handles: Optional */ }
-            {showSideHandles && (
-                <>
-                    <Handle type="target" position={Position.Left} id="left" />
-                    <Handle type="source" position={Position.Right} id="right" />
-                </>
-            )}
+                {showSideHandles && (
+                    <>
+                        <Handle type="target" position={Position.Left} id="left" />
+                        <Handle type="source" position={Position.Right} id="right" />
+                    </> 
+                )}
 
             {/* Top-Bottom Handles */}
             <Handle type="target" position={Position.Top} id="top" />
@@ -55,11 +79,70 @@ const MutationNode = ({ id, data }) => {
     );
 };
 
-const nodeTypes = {
-    mutation: MutationNode,
+const WordlistNode = ({ data }) => {
+    return (
+        <div style={{
+            padding: '15px',
+            borderRadius: '8px',
+            background: '#e3f2fd',
+            border: '2px solid #1976d2',
+            minWidth: '180px',
+            position: 'relative',
+            boxShadow: '0 4px 6px rgba(0,0,0.1)'
+        }}>
+            <Handle type="target" position={Position.Left} id="left" />
+            <Handle type="source" position={Position.Right} id="right" />
+            <Handle type="target" position={Position.Top} id="top" />
+            <Handle type="source" position={Position.Bottom} id="bottom" />
+    
+            <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '10px', color: '1976d2', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                    Original Wordlist
+                </div>
+                <div style={{ fontWeight: 'bold', color: '#333', marginTop: '4px' }}>
+                    {data.label || 'No File Loaded'}
+                </div>
+
+                <button 
+                    className="nodrag"
+                    onClick={() => console.log("TODO: Open a dialogue box")}
+                    style={{
+                        marginTop: '10px',
+                        cursor: 'pointer',
+                        width: '100%',
+                        padding: '5px',
+                        borderRadius: '4px',
+                        border: '1px solid #1976d2',
+                        background: '#fff',
+                        color: '#1976d2',
+                        fontWeight: 'bold'
+                    }}
+                >
+                    Load Wordlist
+                </button>
+                
+                {data.fileSize && (
+                    <div style={{ fontSize: '11px', color: '#666' }}>{data.fileSize} words</div>
+                )}
+            </div>
+        </div>
+    );
 };
 
+const nodeTypes = {
+    mutation: MutationNode,
+    wordlist: WordlistNode,
+};
 
+const initialNodes = [
+    {
+        id: 'wordlist-1',
+        type: 'wordlist',
+        position: { x: 400, y: 300},
+        data: { label: 'wordlist.txt', fileSize: '0'},
+        draggable: true,
+    }
+];
 
 export default function App() {
     //Getting the initial nodes
@@ -86,6 +169,14 @@ export default function App() {
         event.dataTransfer.dropEffect = 'move';
     }, []);
 
+    const onNodeDataChange = useCallback((nodeId, newValue) => {
+        setNodes((nds) => nds.map((node) =>
+            node.id === nodeId ? { ...node, data: { ...node.data, value: newValue } } : node
+        )); 
+    }, []);
+
+
+
     // Dropping onto canvas (creating new node)
     const onDrop = useCallback(
         (event) => {
@@ -110,7 +201,8 @@ export default function App() {
                 data: {
                     type: type, 
                     value: '', 
-                    label : `${capitalizedType} ${count}`
+                    label : `${capitalizedType} ${count}`,
+                    onChange: onNodeDataChange
                 },
             };
 
@@ -138,34 +230,31 @@ export default function App() {
     };
 
     const isValidConnection = (connection) => {
-        const source = connection.sourceHandle;
-        const target = connection.targetHandle;
+        
+        const sourceNode = nodes.find(n => n.id === connection.source);
+        const targetNode = nodes.find(n => n.id === connection.target);
 
+        const sourceH = connection.sourceHandle;
+        const targetH = connection.targetHandle;
 
-        const isHorizontal = (source === 'left' || source === 'right') &&
-                                (target === 'left' || target === 'right');
+        const isHorizontal = (sourceH === 'left' || sourceH === 'right') &&
+                                (targetH === 'left' || targetH === 'right');
 
-        const isVertical = (source === 'top' || source === 'bottom') &&
-                        (target === 'top' || target === 'bottom');
+        const isVertical = (sourceH === 'top' || sourceH === 'bottom') &&
+                        (targetH === 'top' || targetH === 'bottom');
 
-        // Rule 1: No diagonal connections
-        if (!isHorizontal && !isVertical) return false;
+        if (sourceNode?.data.type === 'capitalize' || targetNode?.data.type === 'capitalize') {
+            const capitalizeNode = sourceNode?.data.type === 'capitalize' ? sourceNode: targetNode;
+            const otherNode = sourceNode === capitalizeNode ? targetNode: sourceNode;
 
-        // Rule 2: Rock lock
-        if(isHorizontal) {
-            ///Checking if the node is already stacked
-            const isStacked = (nodeId) => edges.some(e =>
-                (e.source === nodeId || e.target === nodeId) &&
-                (e.sourceHandle === 'top' || e.sourceHandle === 'bottom' ||
-                    e.targetHandle === 'top' || e.targetHandle === 'bottom')
-            );
-            
-            if (isStacked(connection.source) || isStacked(connection.target)) {
-                return false;
-            }
+            return (otherNode?.type === 'wordlist' || otherNode?.data.type === 'capitalize') && isVertical;
         }
 
-        return true;
+        if ((sourceNode?.type === 'wordlist' || targetNode?.type === 'wordlist') && isVertical) {
+            return false;
+        }
+
+        return isHorizontal || isVertical;
     };
 
     return (
