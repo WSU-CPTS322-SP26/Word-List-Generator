@@ -152,10 +152,21 @@ export default function App() {
     const [reactFlowInstance, setReactFlowInstance] = useState(null);
     const [isPaletteOpen, setIsPaletteOpen] = useState(true);
 
-    // Ability to move blocks
+    // Ability to move blocks, preventing deleting wordlist block
     const onNodesChange = useCallback(
-        (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
-        [setNodes]
+        (changes) => {
+
+            const filteredChanges = changes.filter((change) => {
+                if (change.type === 'remove') {
+                    const nodeToRemove = nodes.find((n) => n.id === change.id);
+                    return nodeToRemove?.type !== 'wordlist';
+                }
+                return true;
+            });
+            
+            setNodes((nds) => applyNodeChanges(filteredChanges, nds));
+        },
+        [nodes, setNodes]
     );
 
     const onConnect = useCallback(
