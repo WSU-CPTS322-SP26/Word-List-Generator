@@ -13,11 +13,47 @@ let id = 10;
 const getID = () => `node_${id++}`;
 
 const MutationNode = ({ id, data }) => {
+
     const edges = useEdges();
     const nodes = useNodes();
 
-    {/* Checking if it's a capitalize block */}
-    const isCapitalize = data.type === 'capitalize'
+    // For changing "pend" to "prepend" or "append" based on context
+    const getDynamicLabel = () => {
+        if (data.type !== 'pend') return data.label;
+
+        let isAppend = false;
+        let isPrepend = false;
+        let currentNodeId = id;
+        const visited = new Set();
+
+        while (currentNodeId && !visited.has(currentNodeId)) {
+            visited.add(currentNodeId);
+
+            const edge = edges.find(e => e.source === currentNodeId || e.target === currentNodeId);
+
+            if (!edge) break;
+
+            const neighborId = edge.source === currentNodeId ? edge.target : edge.source;
+            const neighborNode = nodes.find(n => n.id === neighborId);
+
+            if (neighborNode?.type === 'wordlist') {
+                const wordlistHandle = (edge.target === neighborId) ? edge.targetHandle : edge.sourceHandle;
+
+                if (wordlistHandle === 'left') isPrepend = true;
+                if (wordlistHandle === 'right') isAppend = true;
+                break;
+            }
+            currentNodeId = neighborId;
+        }
+
+        if (isAppend) return 'Append';
+        if (isPrepend) return 'Prepend';
+        
+        return data.label;
+    };
+
+    const currentLabel = getDynamicLabel();
+    const isCapitalize = data.type === 'capitalize';
 
     const isOptionInStack = edges.some((edge) => {
         const isPart = edge.source === id || edge.target === id;
@@ -73,7 +109,7 @@ const MutationNode = ({ id, data }) => {
             <Handle type="source" position={Position.Bottom} id="bottom" />
             
             <div style={{ textAlign: 'center', fontWeight: 'bold', color: '#333' }}>
-                {data.label}
+                {currentLabel}
             </div>
         </div>
     );
@@ -155,7 +191,6 @@ export default function App() {
     // Ability to move blocks, preventing deleting wordlist block
     const onNodesChange = useCallback(
         (changes) => {
-
             const filteredChanges = changes.filter((change) => {
                 if (change.type === 'remove') {
                     const nodeToRemove = nodes.find((n) => n.id === change.id);
@@ -163,7 +198,7 @@ export default function App() {
                 }
                 return true;
             });
-            
+
             setNodes((nds) => applyNodeChanges(filteredChanges, nds));
         },
         [nodes, setNodes]
@@ -186,8 +221,6 @@ export default function App() {
         )); 
     }, []);
 
-
-
     // Dropping onto canvas (creating new node)
     const onDrop = useCallback(
         (event) => {
@@ -202,8 +235,7 @@ export default function App() {
                 y: event.clientY,
             });
 
-            const count = nodes.filter(n => n.data.type === type).length + 1;
-            const capitalizedType = type.charAt(0).toUpperCase() + type.slice(1);
+            const displayLabel = type.charAt(0).toUpperCase() + type.slice(1);
 
             const newNode = {
                 id: getID(),
@@ -212,14 +244,14 @@ export default function App() {
                 data: {
                     type: type, 
                     value: '', 
-                    label : `${capitalizedType} ${count}`,
+                    label : displayLabel,
                     onChange: onNodeDataChange
                 },
             };
 
             setNodes((nds) => nds.concat(newNode));
         },
-        [reactFlowInstance, nodes]
+        [reactFlowInstance, nodes, onNodeDataChange]
     );
 
     // Palette Buttons
@@ -232,10 +264,22 @@ export default function App() {
     const handleRun = () => {
         // Maps all nodes on the screen to an object, 
         // TODO: Support for multiple operations in the same stage
-        const manifest = nodes.map(node => ([{
-            type: node.data.type,
-            params: { charset: node.data.value }
-        }]));
+        const manifest = nodes.map(node => {
+
+            let actualType = node.data.type;
+
+            if (actualType === 'pend') {
+                const edge = edges.find(e => e.source === node.id || e.target === node.id);
+
+                const isLeft = edge?.sourceHandle === 'left' || edge?.targetHandle === 'left';
+                actualType = isLeft ? 'prepend': 'append';
+            }
+
+            return [{
+                type: actualType,
+                params: { charset: node.data.value }
+            }];
+        });
 
         StartPipeline(manifest).then(console.log);
     };
@@ -286,23 +330,27 @@ export default function App() {
 
                     {/*The Draggable Bocks */}
                     <div
-                        onDragStart={(e) => onDragStart(e, 'append')}
+                        onDragStart={(e) => onDragStart(e, 'pend')}
                         draggable
-                        style={{ padding: '10px', border: '1px solid #333', marginBottom: '10px', cursor: 'grab', background: '#fff', borderRadius: '4px' }}
+                        style={{ padding: '10px', 
+                                border: '1px solid #333', 
+                                marginBottom: '10px', 
+                                cursor: 'grab', 
+                                background: '#fff', 
+                                borderRadius: '4px' 
+                            }}
                     >
-                        Append
-                    </div>
-                    <div
-                        onDragStart={(e) => onDragStart(e, 'prepend')}
-                        draggable
-                        style={{ padding: '10px', border: '1px solid #333', marginBottom: '10px', cursor: 'grab', background: '#fff', borderRadius: '4px' }}
-                    >
-                        Prepend
+                        Pend
                     </div>
                     <div
                         onDragStart={(e) => onDragStart(e, 'capitalize')}
                         draggable
-                        style={{ padding: '10px', border: '1px solid #333', cursor: 'grab', background: '#fff', borderRadius: '4px' }}
+                        style={{ padding: '10px', 
+                            border: '1px solid #333', 
+                            cursor: 'grab', 
+                            background: '#fff', 
+                            borderRadius: '4px'
+                        }}
                     >
                         Capitalize
                     </div>
