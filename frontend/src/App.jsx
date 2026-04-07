@@ -94,6 +94,14 @@ export default function App() {
     };
 
     const isValidConnection = (connection) => {
+        // this is logic that lets only one connection at each connection point so we dont get
+        // multiple things trying to connect to one spot on a block
+        const handleAlreadyUsed = edges.some(e =>
+            (e.target === connection.target && e.targetHandle === connection.targetHandle) ||
+            (e.source === connection.source && e.sourceHandle === connection.sourceHandle)
+        );
+        // end of one connector logic added
+        if (handleAlreadyUsed) return false;
         const sourceNode = nodes.find(n => n.id === connection.source);
         const targetNode = nodes.find(n => n.id === connection.target);
         const isHorizontal = (connection.sourceHandle === 'left' || connection.sourceHandle === 'right') && 
