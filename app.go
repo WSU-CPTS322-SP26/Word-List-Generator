@@ -22,9 +22,9 @@ func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 }
 
-func (a *App) StartPipeline(spec [][]src.MutSpec) string {
+func (a *App) StartPipeline(manifest [][]src.MutSpec) string {
 	go func() {
-		pipeline, err := src.BuildPipeline(spec)
+		pipeline, err := src.BuildPipeline(manifest)
 		if err != nil {
 			fmt.Printf("Pipeline Build Error: %v\n", err)
 			return

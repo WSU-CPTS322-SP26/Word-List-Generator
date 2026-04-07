@@ -4,7 +4,7 @@ import "fmt"
 
 // Recursive function that takes a single word through all its mutations
 func runPipeline(word string, stage int, pipeline [][]Mutation, scratchpads [][]string, outputChannel chan<- string) {
-	//Base case
+	
 	if stage == len(pipeline) {
 		outputChannel <- word
 		return
