@@ -63,7 +63,11 @@ const MutationNode = ({ id, data }) => {
         return false;
     });
 
-    const showSideHandles = !isCapitalize && !isOptionInStack;
+    // const showSideHandles = !isCapitalize && !isOptionInStack;
+
+    // modified this logic so that if you connect two pends to eachother first,
+    // then you can still connect the side connects incase you forgot to connect to wordlist first
+    const showSideHandles = !isCapitalize;
 
     return (
         <div style={{ padding: '10px', 

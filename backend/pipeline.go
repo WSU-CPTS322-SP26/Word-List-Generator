@@ -2,8 +2,9 @@ package src
 
 import (
 	"fmt"
-	"golang.org/x/text/language"
 	"unicode"
+
+	"golang.org/x/text/language"
 )
 
 // MutSpec represents a single mutation as deserialized from the JSON config
@@ -81,15 +82,17 @@ func resolveCharset(value string) (string, error) {
 // are not correct for the target language.
 // To add a new language, add a new case here and map it to the appropriate unicode.SpecialCase value.
 // Turkish and Azeri share the same unicode casing rules so both names map to the same value.
+// added in english to handle the content sent from the gui.
 func resolveSpecialCase(lang string) (unicode.SpecialCase, error) {
 	switch lang {
 	case "turkish", "azeri":
-		// Turkish and Azeri share the same unicode casing rules so both names map to the same value
 		return unicode.TurkishCase, nil
+	case "english", "default":
+		return unicode.SpecialCase{}, nil
 	case "":
 		return nil, fmt.Errorf("language param is missing or empty")
 	default:
-		return nil, fmt.Errorf("unsupported language %q (supported: turkish, azeri)", lang)
+		return nil, fmt.Errorf("unsupported language %q (supported: english, turkish, azeri)", lang)
 	}
 }
 
