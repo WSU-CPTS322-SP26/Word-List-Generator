@@ -67,10 +67,12 @@ const MutationNode = ({ id, data }) => {
 
     return (
         <div style={{ padding: '10px', 
-        borderRadius: '5px', background: 
-        '#fff', border: '2px solid #333', 
+        borderRadius: '5px', 
+        background: '#fff', 
+        border: '2px solid #333', 
         minWidth: '150px', 
-        position: 'relative' }}>
+        position: 'relative' 
+        }}>
             {showSideHandles && (
                 <>
                     <Handle type="target" position={Position.Left} id="left" />
@@ -81,6 +83,28 @@ const MutationNode = ({ id, data }) => {
             <Handle type="source" position={Position.Bottom} id="bottom" />
             <div style={{ textAlign: 'center', fontWeight: 'bold', color: '#333' }}>
                 {currentLabel}
+            </div>
+
+            {/* Input Field Prototype */}
+            <div className="nodrag">
+                {data.type === 'pend' ? (
+                    <input
+                        type="text"
+                        placeholder="Charset..."
+                        value={data.value || ''}
+                        onChange={(e) => data.onChange(id, e.target.value)}
+                        style={{ width: '100%', fontSize: '12px', padding: '2px' }}
+                    />
+                ) : (
+                    <select
+                        value={data.value || 'lower'}
+                        onChange={(e) => data.onChange(id, e.target.value)}
+                        style={{ width: '100%', fontSize: '12px' }}
+                    >
+                        <option value="uppercase">UPPERCASE</option>
+                        <option value="lowercase">lowercase</option>
+                    </select>
+                )}
             </div>
         </div>
     );

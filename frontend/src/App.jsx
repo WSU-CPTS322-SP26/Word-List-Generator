@@ -62,7 +62,12 @@ export default function App() {
             id: getID(),
             type: 'mutation',
             position,
-            data: { type, value: '', label: displayLabel, onChange: onNodeDataChange },
+            data: { 
+                type, 
+                //Default values
+                value: type === 'capitalize' ? 'uppercase' : '',
+                label: displayLabel,
+                onChange: onNodeDataChange },
         };
         setNodes((nds) => nds.concat(newNode));
     }, [reactFlowInstance, onNodeDataChange]);
@@ -72,6 +77,9 @@ export default function App() {
         event.dataTransfer.effectAllowed = 'move';
     }
 
+    // TO DO
+    // Make this work properly. Needs to ignore the wordlist node 
+    // And possibly add a default language for capitalization
     const handleRun = () => {
         const manifest = nodes.map(node => {
             let actualType = node.data.type;
