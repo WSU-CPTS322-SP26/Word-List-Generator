@@ -17,7 +17,13 @@ let id = 10;
 const getID = () => `node_${id++}`;
 
 const initialNodes = [
-    { id: 'wordlist-1', type: 'wordlist', position: { x: 400, y: 300}, data: { label: 'wordlist.txt', fileSize: '0'}, draggable: true }
+    {
+        id: 'wordlist-1',
+        type: 'wordlist',
+        position: { x: 400, y: 300},
+        data: { label: 'No File Loaded', fileSize: null, filePath: null },
+        draggable: true
+    }
 ];
 
 export default function App() {
@@ -240,10 +246,25 @@ export default function App() {
             manifest.push(...appendStages);
         }
 
+        // ... (end of your traversal logic)
+
         console.log('manifest:', JSON.stringify(manifest, null, 2));
-        StartPipeline(manifest).then(result => {
+
+        // 1. Get the path that was saved when the user loaded the file
+        const wordlistPath = wordlistNode.data.filePath;
+
+        // 2. Make sure a file was actually loaded before sending to Go
+        if (!wordlistPath) {
+            alert("Please load a wordlist file before running the pipeline.");
+            return;
+        }
+
+        // 3. Pass the path FIRST, then the manifest SECOND
+        StartPipeline(wordlistPath, manifest).then(result => {
             console.log(result);
-            alert(JSON.stringify(manifest, null, 2));
+            alert("Pipeline execution finished!");
+        }).catch(err => {
+            console.error("Pipeline Error:", err);
         });
     };
 
