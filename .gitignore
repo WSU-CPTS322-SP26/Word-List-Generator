@@ -9,7 +9,6 @@ wails.log
 # Wordlist outputs and generated data
 src/output/
 src/wordlists/userGenerated/
-*.txt
 *.dict
 *.lst
 
