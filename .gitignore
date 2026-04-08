@@ -7,8 +7,7 @@ frontend/build-res.json
 wails.log
 
 # Wordlist outputs and generated data
-src/output/
-src/wordlists/userGenerated/
+wordlists/userGenerated/
 *.dict
 *.lst
 
