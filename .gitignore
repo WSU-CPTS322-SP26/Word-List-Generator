@@ -12,6 +12,12 @@ src/wordlists/userGenerated/
 *.dict
 *.lst
 
+# Ignore all .txt files globally
+*.txt
+
+# Exception: allow .txt files inside the premade folder
+!**/premade/*.txt
+
 # Extra Mac & IDE protection
 .AppleDouble
 .LSOverride
