@@ -8,26 +8,40 @@ const MutationNode = ({ id, data }) => {
     const getDynamicLabel = () => {
         if (data.type !== 'pend') return data.label;
 
+        // BFS to reliably find the wordlist without getting stuck in edge loops
+        const queue = [id];
+        const visited = new Set();
         let isAppend = false;
         let isPrepend = false;
-        let currentNodeId = id;
-        const visited = new Set();
 
-        while (currentNodeId && !visited.has(currentNodeId)) {
-            visited.add(currentNodeId);
-            const edge = edges.find(e => e.source === currentNodeId || e.target === currentNodeId);
-            if (!edge) break;
+        while (queue.length > 0) {
+            const currentId = queue.shift();
+            if (visited.has(currentId)) continue;
+            visited.add(currentId);
 
-            const neighborId = edge.source === currentNodeId ? edge.target : edge.source;
-            const neighborNode = nodes.find(n => n.id === neighborId);
+            // Find all edges connected to the current node
+            const connectedEdges = edges.filter(e => e.source === currentId || e.target === currentId);
 
-            if (neighborNode?.type === 'wordlist') {
-                const wordlistHandle = (edge.target === neighborId) ? edge.targetHandle : edge.sourceHandle;
-                if (wordlistHandle === 'left') isPrepend = true;
-                if (wordlistHandle === 'right') isAppend = true;
-                break;
+            for (const edge of connectedEdges) {
+                const neighborId = edge.source === currentId ? edge.target : edge.source;
+                const neighborNode = nodes.find(n => n.id === neighborId);
+
+                // If we found the wordlist, check which side we are attached to!
+                if (neighborNode?.type === 'wordlist') {
+                    const wordlistHandle = (edge.target === neighborId) ? edge.targetHandle : edge.sourceHandle;
+                    if (wordlistHandle === 'left') isPrepend = true;
+                    if (wordlistHandle === 'right') isAppend = true;
+                    break;
+                }
+
+                // If it's not the wordlist, add it to the queue to keep searching
+                if (!visited.has(neighborId)) {
+                    queue.push(neighborId);
+                }
             }
-            currentNodeId = neighborId;
+
+            // Stop searching if we successfully identified the side
+            if (isAppend || isPrepend) break;
         }
 
         if (isAppend) return 'Append';
@@ -38,58 +52,23 @@ const MutationNode = ({ id, data }) => {
     const currentLabel = getDynamicLabel();
     const isCapitalize = data.type === 'capitalize';
 
-    const isOptionInStack = edges.some((edge) => {
-        const isPart = edge.source === id || edge.target === id;
-        const isVert = (edge.sourceHandle === 'top' || edge.sourceHandle === 'bottom' ||
-                        edge.targetHandle === 'top' || edge.targetHandle === 'bottom');
-
-        if (isPart && isVert) {
-            const otherId = edge.source === id ? edge.target : edge.source;
-            const otherNode = nodes.find(n => n.id === otherId);
-            if (otherNode?.type === 'mutation') {
-                const otherHasHorizontal = edges.some(e =>
-                    (e.source === otherId && (e.sourceHandle === 'left' || e.sourceHandle === 'right')) ||
-                    (e.target === otherId && (e.targetHandle === 'left' || e.targetHandle === 'right'))
-                );
-                const thisHasHorizontal = edges.some(e => 
-                    (e.source === id && (e.sourceHandle === 'left' || e.sourceHandle === 'right')) ||
-                    (e.target === id && (e.targetHandle === 'left' || e.targetHandle === 'right'))
-                );
-                if (thisHasHorizontal) return false;
-                if (otherHasHorizontal) return true;
-                return edge.source === id;
-            }
-        }
-        return false;
-    });
-
-    // const showSideHandles = !isCapitalize && !isOptionInStack;
-
-    // modified this logic so that if you connect two pends to eachother first,
-    // then you can still connect the side connects incase you forgot to connect to wordlist first
     const showSideHandles = !isCapitalize;
 
     return (
-        <div style={{ padding: '10px', 
-        borderRadius: '5px', 
-        background: '#fff', 
-        border: '2px solid #333', 
-        minWidth: '150px', 
-        position: 'relative' 
-        }}>
+        <div style={{ padding: '10px', borderRadius: '5px', background: '#fff', border: '2px solid #333', minWidth: '150px', position: 'relative' }}>
             {showSideHandles && (
                 <>
                     <Handle type="target" position={Position.Left} id="left" />
                     <Handle type="source" position={Position.Right} id="right" />
-                </> 
+                </>
             )}
             <Handle type="target" position={Position.Top} id="top" />
             <Handle type="source" position={Position.Bottom} id="bottom" />
+
             <div style={{ textAlign: 'center', fontWeight: 'bold', color: '#333' }}>
                 {currentLabel}
             </div>
 
-            {/* Input Field Prototype */}
             <div className="nodrag">
                 {data.type === 'pend' ? (
                     <input
