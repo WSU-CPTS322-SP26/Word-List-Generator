@@ -8,40 +8,30 @@ const MutationNode = ({ id, data }) => {
     const getDynamicLabel = () => {
         if (data.type !== 'pend') return data.label;
 
-        // BFS to reliably find the wordlist without getting stuck in edge loops
-        const queue = [id];
-        const visited = new Set();
         let isAppend = false;
         let isPrepend = false;
+        let currentNodeId = id;
+        const visited = new Set();
 
-        while (queue.length > 0) {
-            const currentId = queue.shift();
-            if (visited.has(currentId)) continue;
-            visited.add(currentId);
+        while (currentNodeId && !visited.has(currentNodeId)) {
+            visited.add(currentNodeId);
 
-            // Find all edges connected to the current node
-            const connectedEdges = edges.filter(e => e.source === currentId || e.target === currentId);
+            const edge = edges.find(e => e.source === currentNodeId || e.target === currentNodeId);
+            if (!edge) break;
 
-            for (const edge of connectedEdges) {
-                const neighborId = edge.source === currentId ? edge.target : edge.source;
-                const neighborNode = nodes.find(n => n.id === neighborId);
+            const neighborId = edge.source === currentNodeId ? edge.target : edge.source;
+            const neighborNode = nodes.find(n => n.id === neighborId);
 
-                // If we found the wordlist, check which side we are attached to!
-                if (neighborNode?.type === 'wordlist') {
-                    const wordlistHandle = (edge.target === neighborId) ? edge.targetHandle : edge.sourceHandle;
-                    if (wordlistHandle === 'left') isPrepend = true;
-                    if (wordlistHandle === 'right') isAppend = true;
-                    break;
-                }
 
-                // If it's not the wordlist, add it to the queue to keep searching
-                if (!visited.has(neighborId)) {
-                    queue.push(neighborId);
-                }
+            // If we found the wordlist, check which side we are attached to!
+            if (neighborNode?.type === 'wordlist') {
+                const wordlistHandle = (edge.target === neighborId) ? edge.targetHandle : edge.sourceHandle;
+                if (wordlistHandle === 'left') isPrepend = true;
+                if (wordlistHandle === 'right') isAppend = true;
+                break;
             }
 
-            // Stop searching if we successfully identified the side
-            if (isAppend || isPrepend) break;
+            currentNodeId = neighborId;
         }
 
         if (isAppend) return 'Append';
@@ -52,10 +42,77 @@ const MutationNode = ({ id, data }) => {
     const currentLabel = getDynamicLabel();
     const isCapitalize = data.type === 'capitalize';
 
-    const showSideHandles = !isCapitalize;
+    const checkIfHideSideHandles = () => {
+        if (isCapitalize) return true;
+
+        const thisHasHorizontal = edges.some(e =>
+            (e.source === id || e.target === id) &&
+            (e.sourceHandle === 'left' || e.sourceHandle === 'right' || e.targetHandle === 'left' || e.targetHandle === 'right')
+        );
+        if (thisHasHorizontal) return false;
+
+        const verticalEdges = edges.filter(e => 
+            (e.source === id || e.target === id) &&
+            (e.sourceHandle === 'top' || e.sourceHandle === 'bottom' || e.targetHandle === 'top' || e.targetHandle === 'bottom')
+        );
+
+        if (verticalEdges.length === 0) return false;
+
+        const visited = new Set([id]);
+        const queue = [...verticalEdges.map(e => (e.source === id ? e.target : e.source))];
+        let stackHasHorizontal = false;
+
+        let lowestNodeId = id;
+        let lowestY = nodes.find(n => n.id === id)?.position.y || 0;
+
+        while (queue.length > 0) {
+            const currentId = queue.shift();
+            if (visited.has(currentId)) continue;
+            visited.add(currentId);
+
+            const currentNode = nodes.find(n => n.id === currentId);
+            if (!currentNode) continue;
+
+            if (currentNode.position.y > lowestY) {
+                lowestY = currentNode.position.y;
+                lowestNodeId = currentId;
+            }
+
+            const hasHoriz = edges.some(e => 
+            (e.source === currentId || e.target === currentId) &&
+            (e.sourceHandle === 'left' || e.sourceHandle === 'right' || e.targetHandle === 'left' || e.targetHandle === 'right')
+            );
+
+            if (hasHoriz) {
+                stackHasHorizontal = true;
+                break;
+            }
+
+            edges.forEach(e => {
+                const isVert = e.sourceHandle === 'top' || e.sourceHandle === 'bottom' || e.targetHandle === 'top' || e.targetHandle === 'bottom';
+                if (isVert) {
+                    if (e.source === currentId && !visited.has(e.target)) queue.push(e.target);
+                    if (e.target === currentId && !visited.has(e.source)) queue.push(e.source);
+                }
+            });
+        }
+
+        if (stackHasHorizontal) return true;
+
+        return id !== lowestNodeId;
+    };
+
+    const showSideHandles = !checkIfHideSideHandles();
+
 
     return (
-        <div style={{ padding: '10px', borderRadius: '5px', background: '#fff', border: '2px solid #333', minWidth: '150px', position: 'relative' }}>
+        <div style={{ padding: '10px', 
+        borderRadius: '5px', 
+        background: '#fff', 
+        border: '2px solid #333', 
+        minWidth: '150px', 
+        position: 'relative' 
+        }}>
             {showSideHandles && (
                 <>
                     <Handle type="target" position={Position.Left} id="left" />
