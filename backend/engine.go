@@ -1,10 +1,8 @@
 package src
 
-import "fmt"
-
 // Recursive function that takes a single word through all its mutations
 func runPipeline(word string, stage int, pipeline [][]Mutation, scratchpads [][]string, outputChannel chan<- string) {
-	
+
 	if stage == len(pipeline) {
 		outputChannel <- word
 		return
@@ -23,6 +21,7 @@ func runPipeline(word string, stage int, pipeline [][]Mutation, scratchpads [][]
 		}
 	}
 }
+
 func Worker(workerID int, pipeline [][]Mutation, inputChannel <-chan string, outputChannel chan<- string) {
 	//Making buffers. These only serve this specific worker, one for each stage in the pipeline
 	//Each stage needs its own buffer/scratchpad
@@ -32,7 +31,6 @@ func Worker(workerID int, pipeline [][]Mutation, inputChannel <-chan string, out
 		scratchpads[i] = make([]string, 0, 256)
 	}
 
-	fmt.Printf("Running worker %d\n", workerID)
 	//Now, begin running each word in the input channel through the pipeline of Mutations
 	//Works until the inputChannel is closed and empty
 	for word := range inputChannel {

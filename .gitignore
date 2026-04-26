@@ -1,65 +1,33 @@
-build/bin
-node_modules
-frontend/dist
+# Build output
+build/bin/
 
-# Wails build logs and temporary files
-frontend/build-res.json
-wails.log
+# Frontend build output
+frontend/dist/
+frontend/node_modules/
 
-# Wordlist outputs and generated data
-wordlists/puserGenerated/
-*.dict
-*.lst
+# Canvas saves
+canvas/
 
-# Ignore all .txt files globally
-*.txt
+# User-generated wordlists
+wordlists/userGenerated/
 
-# Exception: allow .txt files inside the premade folder
-!**/premade/*.txt
+# Stray output files at root
+mutated_results.txt
+colors.txt
+fd
 
-# Extra Mac & IDE protection
-.AppleDouble
-.LSOverride
-*.swp
-*~
-.idea_modules/
+# Go test module
+tests/go.mod
+tests/go.sum
 
-# Binaries for programs
-*.exe
-*.lbr
-*.lib
-*.obj
-*.o
-*.so
-*.dll
-
-# Test binary, should not be committed to git
-# Except for the case you are committing them for testing purposes
-# *.test
-
-# Output of the go tool pprof
-# *.pprof
-
-# IDE files
+# IDE
 .idea/
+.vscode/
 
-# Go module cache (optional, if you want to ignore it)
-# By default, Go places this in the user's home directory.
-# This line is typically not needed in a project-level gitignore, but useful for global ones.
-# $GOPATH/pkg/mod/
-
-# Project-specific IDE files that are safe to ignore
-# Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, GoLand
-# Files that are generated on import or contain user-specific settings should be ignored.
-out/
-.idea/modules.xml
-.idea/workspace.xml
-.idea/tasks.xml
-.idea/*.iml
-.idea/misc.xml
-.idea/vcs.xml
-.idea/dictionaries
-
-# OS-generated files
+# OS
 .DS_Store
 Thumbs.db
+
+# Go build artifacts
+*.test
+*.out

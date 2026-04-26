@@ -8,76 +8,46 @@ import (
 	"golang.org/x/text/language"
 )
 
-//TODO
-//X case up
-//X case down
-//Leetspeak (multiple versions
-//-
-//alternate caps
-//reverse string
-
 // Mutation Defines a Mutation function, allowing structural typing
 type Mutation func(word string, scratchpad []string) []string
-
-// Helper Mutations: Mutations that alter mutations, or assist in some way //
-
-// MakeOptional takes a Mutation, then returns a modified version of the mutation that also returns the unaltered word
-func MakeOptional(mut Mutation) Mutation {
-	return func(word string, scratchpad []string) []string {
-		//Put original unchanged word in scratchpad
-		scratchpad = append(scratchpad, word)
-
-		//Run the mutation and append its new word to the same scratchpad
-		temp := mut(word, []string{})
-		scratchpad = append(scratchpad, temp...)
-
-		return scratchpad
-	}
-}
 
 // 1-to-Many Mutations: Taking one word and making multiple variants //
 
 func CreateAppendMutation(charset string) Mutation {
+	runes := []rune(charset)
 	//Create a new slice of individual characters
 	//Doing this now means that each worker doesn't need to do this themselves
-	characters := make([]string, len(charset))
-
+	characters := make([]string, len(runes))
 	//Transferring all the characters to the new slice
-	for i, r := range charset {
+	for i, r := range runes {
 		characters[i] = string(r)
 	}
-
 	//Note that this part right here is the actual reversing logic
 	//Returning an anonymous function that matches our type Mutation
 	//This is expecting scratchpad to be length 0 with some capacity
 	return func(word string, scratchpad []string) []string {
-
 		//Appending to the pre-used, length 0 buffer
 		//Throwing away the slice index label with _
 		for _, c := range characters {
 			scratchpad = append(scratchpad, word+c)
 		}
-
 		return scratchpad
 	}
 }
 
 func CreatePrependMutation(charset string) Mutation {
-	characters := make([]string, len(charset))
-
-	for i, r := range charset {
+	runes := []rune(charset)
+	characters := make([]string, len(runes))
+	for i, r := range runes {
 		characters[i] = string(r)
 	}
-
 	return func(word string, scratchpad []string) []string {
-
 		//Appending to the pre-used, length 0 buffer
 		//Closure allows this anonymous function to access the charset
 		//Throwing away the slice index label with _
 		for _, c := range characters {
 			scratchpad = append(scratchpad, c+word)
 		}
-
 		return scratchpad
 	}
 }
@@ -106,5 +76,49 @@ func CreateTitleCaseMutation(lang language.Tag) Mutation {
 	return func(word string, scratchpad []string) []string {
 		caser := cases.Title(lang)
 		return append(scratchpad, caser.String(word))
+	}
+}
+
+// L33tTable is an ordered list of substitution presets.
+// Level index maps to the frontend dropdown value "1", "2", "3".
+var L33tLevels = []map[rune]string{
+	// Level 1 — minimal
+	{'e': "3", 'a': "4"},
+	// Level 2 — common
+	{'e': "3", 'a': "4", 'i': "1", 'o': "0", 's': "5", 't': "7"},
+	// Level 3 — full
+	{
+		'e': "3", 'a': "4", 'i': "1", 'o': "0",
+		's': "5", 't': "7", 'b': "8", 'g': "9",
+		'l': "1", 'z': "2", 'q': "0", 'x': "%",
+	},
+}
+
+// CreateLeetspeakMutation creates a preset level leet mutation (levels 1-3, 1-indexed).
+func CreateLeetspeakMutation(level int) Mutation {
+	if level < 1 || level > len(L33tLevels) {
+		level = 1
+	}
+	return createLeetFromTable(L33tLevels[level-1])
+}
+
+// CreateCustomLeetspeakMutation creates a leet mutation from a caller-supplied
+// map of rune → replacement string. Used for the advanced per-letter UI.
+func CreateCustomLeetspeakMutation(table map[rune]string) Mutation {
+	return createLeetFromTable(table)
+}
+
+func createLeetFromTable(table map[rune]string) Mutation {
+	return func(word string, scratchpad []string) []string {
+		var sb strings.Builder
+		sb.Grow(len(word))
+		for _, r := range word {
+			if sub, ok := table[unicode.ToLower(r)]; ok {
+				sb.WriteString(sub)
+			} else {
+				sb.WriteRune(r)
+			}
+		}
+		return append(scratchpad, sb.String())
 	}
 }

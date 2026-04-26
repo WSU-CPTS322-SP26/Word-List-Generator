@@ -5,13 +5,19 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync/atomic"
 )
-
-//TODO: User progress update
 
 // StartCollector is a function to take words from the outputChannel and write them to a target file, then sends a done signal to the statusChannel channel
 // Expects open inputChannel, open statusChannel, the path, and the name of the file. Also checks if the file is to be overwritten with new data
-func StartCollector(outputChannel <-chan string, statusChannel chan<- error, path string, filename string, overwrite bool) {
+func StartCollector(
+	outputChannel <-chan string,
+	statusChannel chan<- error,
+	path string,
+	filename string,
+	overwrite bool,
+	bytesOut *atomic.Int64,
+) {
 
 	//Tracker for initializing the filepaths only if words are put into the buffer
 	fileCreated := false
@@ -68,7 +74,10 @@ func StartCollector(outputChannel <-chan string, statusChannel chan<- error, pat
 			fileCreated = true
 		}
 		//Now that we're ready to write, start filling up the outFileBuffer and skip previous logic
-		_, err := outFileBuffer.WriteString(word + "\n")
+		n, err := outFileBuffer.WriteString(word + "\n")
+		if bytesOut != nil {
+			bytesOut.Add(int64(n))
+		}
 		if err != nil {
 			statusChannel <- fmt.Errorf("failed to write to buffer: %v", err)
 			break
@@ -80,16 +89,11 @@ func StartCollector(outputChannel <-chan string, statusChannel chan<- error, pat
 		//First, flush any remaining words left in the buffer to the file
 		if err := outFileBuffer.Flush(); err != nil {
 			statusChannel <- fmt.Errorf("failed to flush buffer: %v", err)
-			err := outFile.Close()
-			if err != nil {
-				statusChannel <- fmt.Errorf("failed to close file %s: %v", fullPath, err)
-				return
-			}
+			outFile.Close()
 			return
 		}
 		//Then close the file
-		err := outFile.Close()
-		if err != nil {
+		if err := outFile.Close(); err != nil {
 			statusChannel <- fmt.Errorf("failed to close file %s: %v", fullPath, err)
 			return
 		}

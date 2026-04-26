@@ -2,6 +2,7 @@ package src
 
 import (
 	"fmt"
+	"strings"
 	"unicode"
 
 	"golang.org/x/text/language"
@@ -136,7 +137,31 @@ func buildMutation(ms MutSpec) (Mutation, error) {
 			return nil, fmt.Errorf("mutation %q: %w", ms.Type, err)
 		}
 		return CreateLowerCaseMutation(lang), nil
-
+	case "leetspeak":
+		levelStr := ms.Params["level"]
+		if levelStr == "custom" {
+			// Parse "a:4,e:3,s:5" from the single "pairs" param
+			table := make(map[rune]string)
+			for _, pair := range strings.Split(ms.Params["pairs"], ",") {
+				pair = strings.TrimSpace(pair)
+				parts := strings.SplitN(pair, ":", 2)
+				if len(parts) == 2 {
+					runes := []rune(strings.TrimSpace(parts[0]))
+					if len(runes) == 1 {
+						table[unicode.ToLower(runes[0])] = strings.TrimSpace(parts[1])
+					}
+				}
+			}
+			return CreateCustomLeetspeakMutation(table), nil
+		}
+		level := 1
+		switch levelStr {
+		case "2":
+			level = 2
+		case "3":
+			level = 3
+		}
+		return CreateLeetspeakMutation(level), nil
 	case "title_case":
 		// Resolves the language tag and passes it to the title case factory.
 		return CreateTitleCaseMutation(language.English), nil
@@ -176,23 +201,3 @@ func BuildPipeline(spec [][]MutSpec) ([][]Mutation, error) {
 
 	return pipeline, nil
 }
-
-// testing commented out for now
-//// Hardcoded pipeline for testing
-//func BuildTestPipeline() [][]Mutation {
-//	//Makes original, titled, and uppercase Turkish
-//	stage1 := []Mutation{
-//		MakeOptional(CreateTitleCaseMutation(language.English)),
-//		CreateUpperCaseMutation(unicode.AzeriCase),
-//	}
-//
-//	stage2 := []Mutation{
-//		CreateAppendMutation("abcdefghijklmnopqrstuvwxyz"),
-//	}
-//
-//	stage3 := []Mutation{
-//		CreatePrependMutation("0123456789ABCDEF"),
-//	}
-//
-//	return [][]Mutation{stage1, stage2, stage3}
-//}
