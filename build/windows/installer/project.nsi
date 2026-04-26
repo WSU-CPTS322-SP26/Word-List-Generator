@@ -71,9 +71,9 @@ ManifestDPIAware true
 #!finalize 'signtool --file "%1"'
 
 Name "${INFO_PRODUCTNAME}"
-OutFile "..\..\bin\${INFO_PROJECTNAME}-${ARCH}-installer.exe" # Name of the installer's file.
-InstallDir "$PROGRAMFILES64\${INFO_COMPANYNAME}\${INFO_PRODUCTNAME}" # Default installing folder ($PROGRAMFILES is Program Files folder).
-ShowInstDetails show # This will always show the installation details.
+OutFile "..\..\bin\${INFO_PROJECTNAME}-${ARCH}-installer.exe" 
+InstallDir "$PROGRAMFILES64\Mutalist"
+ShowInstDetails show 
 
 Function .onInit
    !insertmacro wails.checkArchitecture
@@ -88,8 +88,19 @@ Section
 
     !insertmacro wails.files
 
-    CreateShortcut "$SMPROGRAMS\${INFO_PRODUCTNAME}.lnk" "$INSTDIR\${PRODUCT_EXECUTABLE}"
-    CreateShortCut "$DESKTOP\${INFO_PRODUCTNAME}.lnk" "$INSTDIR\${PRODUCT_EXECUTABLE}"
+    SetOutPath "$INSTDIR\wordlists\premade"
+    File "..\..\..\wordlists\premade\common_english_words_10k.txt"
+    File "..\..\..\wordlists\premade\common_names_10k.txt"
+    File "..\..\..\wordlists\premade\common_passwords_10k.txt"
+    File "..\..\..\wordlists\premade\popular_sports_teams_300.txt"
+    File "..\..\..\wordlists\premade\common_keyboard_walks_10k.txt"
+
+    ; Create empty canvas directory
+    CreateDirectory "$INSTDIR\canvas"
+
+    SetOutPath "$INSTDIR"
+    CreateShortcut "$SMPROGRAMS\Mutalist.lnk" "$INSTDIR\Mutalist.exe"
+    CreateShortcut "$DESKTOP\Mutalist.lnk" "$INSTDIR\Mutalist.exe"
 
     !insertmacro wails.associateFiles
     !insertmacro wails.associateCustomProtocols
